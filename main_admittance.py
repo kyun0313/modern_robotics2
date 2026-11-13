@@ -265,12 +265,12 @@ def main(task="setpoint", friction_on=False, seconds=10.0):
             F = read_floor_force(model, data, floor_id, tip_id)
 
             # Fd
-            if data.time < 15.0:
-                Fd = 7.0 * min(data.time / 1.0, 1.0)
-            elif data.time < 20.0:
-                Fd = 10.0
+            if data.time < 3.0:
+                Fd = 3.0 * min(data.time / 1.0, 1.0)
+            elif data.time < 6.0:
+                Fd = 5.0
             else:
-                Fd = 7.0
+                Fd = 3.0
 
             p_ref = p_start.copy()
             p_ref[2] = 0.025
@@ -307,7 +307,7 @@ def main(task="setpoint", friction_on=False, seconds=10.0):
 
             J = np.vstack((jac_pos, jac_rot))
             J_pinv = np.linalg.pinv(J, rcond=1e-5)
-            mujoco.mj_jacDot(model, data, jac_dot_pos, jac_dot_rot, p, site_id)
+            mujoco.mj_jacDot(model, data, jac_dot_pos, jac_dot_rot, p, site_body_id)
             Jdot = np.vstack((jac_dot_pos, jac_dot_rot))
 
             acc_des = np. r_[a_des, alpha_des]
@@ -315,7 +315,7 @@ def main(task="setpoint", friction_on=False, seconds=10.0):
             qdd_des = J_pinv @ (acc_des - Jdot @ data.qvel)
 
             qdd_null = np.zeros(model.nv)
-            qdd_null[dof_ids] = (10*(q_posture - data.qpos) - 6*data.qvel[dof_ids])
+            qdd_null[dof_ids] = (10*(q_posture - data.qpos[dof_ids]) - 6*data.qvel[dof_ids])
             N = np.eye(model.nv) - J_pinv @ J
             qdd_des += N @ qdd_null
 
@@ -398,4 +398,4 @@ def main(task="setpoint", friction_on=False, seconds=10.0):
             
             
 if __name__ == "__main__":
-    main(task="setpoint", friction_on=True, seconds=30.0,)
+    main(task="setpoint", friction_on=False, seconds=10.0,)
